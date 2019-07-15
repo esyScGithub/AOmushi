@@ -3,6 +3,7 @@
 import pyxel
 import numpy as np
 import random as rd
+import itertools as it
 
 
 # Define Constant Value
@@ -23,8 +24,9 @@ class App:
     def __init__(self):
         pyxel.init(128, 160, fps=60)
         self.mainInit()
+        self.__randBaseList = np.array(list(it.product(range(self.__fieldSize),range(self.__fieldSize))))
         self.__gameState = GAME_TITLE
-        pyxel.load("swml.pyxel")
+        pyxel.load("C:/Users/esyNote/Desktop/VSCodeWork/Git/esyWork/swml.pyxres")
         pyxel.run(self.update, self.draw)
 
     def update(self):
@@ -52,9 +54,9 @@ class App:
         self.__moveState = MOVE_RIGHT
         self.__inputKey = NONE
         self.__moveSpeed = 7
-        self.__snakeBody = [[0, 0], ]
+        self.__snakeBody = np.array([[0, 0], ])
         self.__score = 0
-        self.__foodPos = [rd.randint(0, self.__fieldSize-1), rd.randint(0, self.__fieldSize-1)]
+        self.__foodPos = np.array([rd.randint(0, self.__fieldSize-1), rd.randint(0, self.__fieldSize-1)])
 
     def gameMain(self):
         self.__moveStep += 1
@@ -103,16 +105,18 @@ class App:
             self.x = (self.x+self.__moveX) % self.__fieldSize
             self.y = (self.y+self.__moveY) % self.__fieldSize
 
-            if [self.x, self.y] in self.__snakeBody:
+            # if [self.x, self.y] in self.__snakeBody:
+            if np.in1d([0,0], [[0,1],[1,0]]):
+                print("error")
                 self.__gameState = GAME_RESULT
 
-            self.__snakeBody.append([self.x, self.y])
+            np.append( self.__snakeBody, ([self.x, self.y]))
 
-            if self.__snakeBody[-1] == self.__foodPos: # foodPosが2行1列に対して、bodyが1行2列なので、inでTrueにならない
+            if np.all(self.__snakeBody[-1] == self.__foodPos): # foodPosが2行1列に対して、bodyが1行2列なので、inでTrueにならない
                 self.nextFood()
                 self.__score += 1
             else:
-                self.__snakeBody.pop(0)
+                np.delete(self.__snakeBody, 0, axis=0)
 
         else:
             pass
@@ -143,7 +147,13 @@ class App:
 
 
     def nextFood(self):
-        self.__foodPos = [rd.randint(0, self.__fieldSize-1), rd.randint(0, self.__fieldSize-1)]
+        # ↓で一致する座標だけTrueにできる
+        # numpy.in1d(x.view(dtype='i,i').reshape(x.shape[0]),y.view(dtype='i,i').reshape(y.shape[0]))
+        tempSnakeBody = np.array(self.__snakeBody)
+        # tempFoodPos = np.in1d(self.__randBaseList.view(dtype='i,i').reshape(self.__randBaseList.shape[0]),tempSnakeBody.view(dtype='i,i').reshape(tempSnakeBody.shape[0]))
+        tempFoodPos = np.in1d(self.__randBaseList.view(dtype='i,i').reshape(self.__randBaseList.shape[0]),self.__snakeBody.view(dtype='i,i').reshape(self.__snakeBody.shape[0]))
+
+        self.__foodPos = np.random.choice(self.__randBaseList[~tempFoodPos])
 
 
 if __name__ == "__main__":
