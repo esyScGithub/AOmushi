@@ -115,18 +115,15 @@ class App:
             self.y = (self.y+self.__moveY) % self.__fieldSize
 
             if [self.x, self.y] in self.__snakeBody:
-            # if np.in1d([0,0], [[0,1],[1,0]]):
                 print("error")
                 self.__gameState = GAME_RESULT
 
-            # np.append( self.__snakeBody, ([self.x, self.y]))
             self.__snakeBody.append([self.x, self.y])
 
             if self.__snakeBody[-1] == self.__foodPos: # foodPosが2行1列に対して、bodyが1行2列なので、inでTrueにならない
                 self.nextFood()
                 self.__score += 1
             else:
-                # np.delete(self.__snakeBody, 0, axis=0)
                 self.__snakeBody.pop(0)
 
         else:
