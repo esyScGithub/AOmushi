@@ -5,6 +5,15 @@ import numpy as np
 import random as rd
 import itertools as it
 
+'''
+TODO:
+外壁判定追加
+スコア保存追加
+ランキング閲覧
+コード整理（特にクラス化）
+
+'''
+
 
 # Define Constant Value
 STEP = 0.1
@@ -54,9 +63,9 @@ class App:
         self.__moveState = MOVE_RIGHT
         self.__inputKey = NONE
         self.__moveSpeed = 7
-        self.__snakeBody = np.array([[0, 0], ])
+        self.__snakeBody = [[0, 0], ]
         self.__score = 0
-        self.__foodPos = np.array([rd.randint(0, self.__fieldSize-1), rd.randint(0, self.__fieldSize-1)])
+        self.__foodPos = [rd.randint(0, self.__fieldSize-1), rd.randint(0, self.__fieldSize-1)]
 
     def gameMain(self):
         self.__moveStep += 1
@@ -105,18 +114,20 @@ class App:
             self.x = (self.x+self.__moveX) % self.__fieldSize
             self.y = (self.y+self.__moveY) % self.__fieldSize
 
-            # if [self.x, self.y] in self.__snakeBody:
-            if np.in1d([0,0], [[0,1],[1,0]]):
+            if [self.x, self.y] in self.__snakeBody:
+            # if np.in1d([0,0], [[0,1],[1,0]]):
                 print("error")
                 self.__gameState = GAME_RESULT
 
-            np.append( self.__snakeBody, ([self.x, self.y]))
+            # np.append( self.__snakeBody, ([self.x, self.y]))
+            self.__snakeBody.append([self.x, self.y])
 
-            if np.all(self.__snakeBody[-1] == self.__foodPos): # foodPosが2行1列に対して、bodyが1行2列なので、inでTrueにならない
+            if self.__snakeBody[-1] == self.__foodPos: # foodPosが2行1列に対して、bodyが1行2列なので、inでTrueにならない
                 self.nextFood()
                 self.__score += 1
             else:
-                np.delete(self.__snakeBody, 0, axis=0)
+                # np.delete(self.__snakeBody, 0, axis=0)
+                self.__snakeBody.pop(0)
 
         else:
             pass
@@ -131,7 +142,8 @@ class App:
     def draw(self):
         if self.__gameState == GAME_TITLE:
             pyxel.cls(0)
-            pyxel.text(pyxel.width/2-10, pyxel.height/2, "Snake", col=12)
+            pyxel.text(pyxel.width/2-12, pyxel.height/2, "AOmushi", col=12)
+            pyxel.text(0, pyxel.height/2+20, "Snakegame with Machine Learning.", col=10)
         elif self.__gameState == GAME_PLAYING:
             pyxel.cls(1)
             pyxel.bltm(0, 0, 0, 0, 0, self.__fieldSize, self.__fieldSize)
@@ -149,11 +161,12 @@ class App:
     def nextFood(self):
         # ↓で一致する座標だけTrueにできる
         # numpy.in1d(x.view(dtype='i,i').reshape(x.shape[0]),y.view(dtype='i,i').reshape(y.shape[0]))
-        tempSnakeBody = np.array(self.__snakeBody)
-        # tempFoodPos = np.in1d(self.__randBaseList.view(dtype='i,i').reshape(self.__randBaseList.shape[0]),tempSnakeBody.view(dtype='i,i').reshape(tempSnakeBody.shape[0]))
-        tempFoodPos = np.in1d(self.__randBaseList.view(dtype='i,i').reshape(self.__randBaseList.shape[0]),self.__snakeBody.view(dtype='i,i').reshape(self.__snakeBody.shape[0]))
+        tempSnakeBody = np.array(self.__snakeBody, dtype='int32')
+        # 全座標からスネークボディを除く座標を抽出
+        tempFoodPos = self.__randBaseList[~np.in1d(self.__randBaseList.view(dtype='i,i').reshape(self.__randBaseList.shape[0]), tempSnakeBody.view(dtype='i,i').reshape(tempSnakeBody.shape[0]))]
 
-        self.__foodPos = np.random.choice(self.__randBaseList[~tempFoodPos])
+        tempFoodPosReview = tempFoodPos.view(dtype='i,i').reshape(tempFoodPos.shape[0])
+        self.__foodPos = list(np.random.choice(tempFoodPosReview))
 
 
 if __name__ == "__main__":
