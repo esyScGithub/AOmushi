@@ -47,7 +47,7 @@ class App:
         self.__randBaseList = np.array(
             list(it.product(range(self.__fieldSize), range(self.__fieldSize))))
         self.__gameState = GAME_TITLE
-        pyxel.load(FILE_DIR + "/swml.pyxres")
+        pyxel.load(FILE_DIR + "/AOmushi.pyxres")
         pyxel.run(self.update, self.draw)
 
     def update(self):
