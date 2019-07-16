@@ -5,6 +5,7 @@ import numpy as np
 import random as rd
 import itertools as it
 import csv
+import os
 
 '''
 TODO:
@@ -30,21 +31,23 @@ GAME_RESULT = 2
 
 WALL_SHIFT = 8
 
+FILE_DIR = os.path.dirname(__file__)
+
 
 class App:
 
     def __init__(self):
-        # with open('/data/result.csv') as f:
-        #     resultFile = csv.reader(f)
-        #     for l in resultFile:
-        #         # TODO CSV読み出し作る。ファイルが無いときはファイル作る。できれば、新規作成時はそのメッセージだす。
-        #         pass
+        with open(FILE_DIR + '/data/result.csv') as f:
+            resultFile = csv.reader(f)
+            for l in resultFile:
+                # TODO CSV読み出し作る。ファイルが無いときはファイル作る。できれば、新規作成時はそのメッセージだす。
+                pass
         pyxel.init(144, 160, fps=60)
         self.mainInit()
         self.__randBaseList = np.array(
             list(it.product(range(self.__fieldSize), range(self.__fieldSize))))
         self.__gameState = GAME_TITLE
-        pyxel.load("swml.pyxres")
+        pyxel.load(FILE_DIR + "/swml.pyxres")
         pyxel.run(self.update, self.draw)
 
     def update(self):
