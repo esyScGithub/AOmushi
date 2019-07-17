@@ -4,7 +4,7 @@ import pyxel
 import numpy as np
 import random as rd
 import itertools as it
-import csv
+import pandas as pd
 import os
 
 '''
@@ -16,32 +16,33 @@ TODO:
 '''
 
 
-# Define Constant Value
-STEP = 0.1
-STOP = 0.0
+# 定数定義
+
+# 動作方向
 MOVE_LEFT = 0
 MOVE_DOWN = 1
 MOVE_UP = 2
 MOVE_RIGHT = 3
 NONE = 4
 
+# ゲーム状態
 GAME_TITLE = 0
 GAME_PLAYING = 1
 GAME_RESULT = 2
+GAME_RANK = 3
+GAME_SETTING = 4
 
+# 壁サイズ（サイズ分動作領域をシフトする）
 WALL_SHIFT = 8
 
+# 実行ファイルディレクトリ
 FILE_DIR = os.path.dirname(__file__)
 
 
 class App:
 
     def __init__(self):
-        with open(FILE_DIR + '/data/result.csv') as f:
-            resultFile = csv.reader(f)
-            for l in resultFile:
-                # TODO CSV読み出し作る。ファイルが無いときはファイル作る。できれば、新規作成時はそのメッセージだす。
-                pass
+        # readRankData = pd.read_csv(FILE_DIR+'/data/result.csv')
         pyxel.init(144, 160, fps=60)
         self.mainInit()
         self.__randBaseList = np.array(
@@ -70,8 +71,8 @@ class App:
         self.x = 0
         self.y = 0
         self.__moveStep = 0
-        self.__moveX = STOP
-        self.__moveY = STOP
+        self.__moveX = 0
+        self.__moveY = 0
         self.__moveState = MOVE_RIGHT
         self.__inputKey = NONE
         self.__moveSpeed = 7
@@ -112,15 +113,15 @@ class App:
 
             if self.__moveState == MOVE_LEFT:
                 self.__moveX = -1
-                self.__moveY = STOP
+                self.__moveY = 0
             elif self.__moveState == MOVE_RIGHT:
                 self.__moveX = 1
-                self.__moveY = STOP
+                self.__moveY = 0
             elif self.__moveState == MOVE_UP:
-                self.__moveX = STOP
+                self.__moveX = 0
                 self.__moveY = -1
             elif self.__moveState == MOVE_DOWN:
-                self.__moveX = STOP
+                self.__moveX = 0
                 self.__moveY = 1
 
             self.__moveStep %= self.__moveSpeed
