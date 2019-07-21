@@ -2,21 +2,21 @@
 
 state "Title" as t
 state "Playing" as p
-state "Result" as r
+state "Result" as re
 state "Setting" as s
-state "Ranking" as r
+state "Ranking" as ra
 
 [*] -d-> t
 t -r-> p : Press Enter
-p -[hidden]d-> r
-s -[hidden]r-> r
-t -> r : Press R
-r -u-> t : Press BS
+p -[hidden]d-> ra
+s -[hidden]r-> ra
+t -> ra : Press R
+ra -u-> t : Press BS
 t -d-> s : Press S
 s -u-> t : Press BS
-p -r-> r : Gameover
-r -l-> t : Press BS
-r -l-> p : Press R
+p -r-> re : Gameover
+re -l-> t : Press BS
+re -l-> p : Press R
 
 @enduml
 
