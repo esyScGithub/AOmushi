@@ -1,49 +1,22 @@
 @startuml gameState
 
-state "Title" as t
-state "Playing" as p
-state "Result" as r
-state "Setting" as s
-state "Ranking" as r
+state "Title" as title
+state "Playing" as play
+state "Result" as result
+state "Setting" as setting
+state "Ranking" as rank
 
-[*] -d-> t
-t -r-> p : Press Enter
-p -[hidden]d-> r
-s -[hidden]r-> r
-t -> r : Press R
-r -u-> t : Press BS
-t -d-> s : Press S
-s -u-> t : Press BS
-p -r-> r : Gameover
-r -l-> t : Press BS
-r -l-> p : Press R
+[*] -d-> title
+title -r-> play : Press Enter
+play -[hidden]d-> rank
+setting -[hidden]r-> rank
+title -> rank : Press R
+rank -u-> title : Press BS
+title -d-> setting : Press S
+setting -u-> title : Press BS
+play -r-> result : Gameover
+result -l-> title : Press BS
+result -l-> play : Press R
 
-@enduml
-
-@startuml gameMoveState
-
-state "LEFT" as l
-state "RIGHT" as r
-state "UP" as u
-state "DOWN" as d
-
-[*] -d-> l
-
-l -r-> r : command=Right
-l -d-> u : command=Up
-u -r-> d : command=Down
-r -d-> d : command=Down
-
-l -> d : command=Down
-
-u -> l : command=Left
-u -> r : command=Right
-
-r -> l : command=Left
-r -> u : command=Up
-
-d -> l : command=Left
-d -> r : command=Right
-d -> u : command=Up
 
 @enduml
