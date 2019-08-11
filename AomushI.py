@@ -38,18 +38,24 @@ WALL_SHIFT = 8
 
 # 実行ファイルディレクトリ
 FILE_DIR = os.path.dirname(__file__)
+RESULT_FILE_PATH = "/data/result.csv"
 
 
 class App:
 
     def __init__(self):
-        # readRankData = pd.read_csv(FILE_DIR+'/data/result.csv')
+        if (os.path.exists(FILE_DIR+RESULT_FILE_PATH)):
+            readRankData = pd.read_csv(FILE_DIR+RESULT_FILE_PATH)
+        else:
+            #ランキングデータの空配列を用意
+            pass
+
         pyxel.init(144, 160, fps=60)
         self.mainInit()
         self.__randBaseList = np.array(
             list(it.product(range(self.__fieldSize), range(self.__fieldSize))))
         self.__gameState = GAME_TITLE
-        pyxel.load(FILE_DIR + "/AOmushi.pyxres")
+        pyxel.load(FILE_DIR + "/AomushI.pyxres")
         pyxel.run(self.update, self.draw)
 
     def update(self):
