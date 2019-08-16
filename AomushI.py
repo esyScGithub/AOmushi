@@ -47,7 +47,6 @@ class App:
             readRankData = pd.read_csv(FILE_DIR+RESULT_FILE_PATH)
         else:
             #ランキングデータの空配列を用意
-
             pass
 
         pyxel.init(144, 160, fps=60)
