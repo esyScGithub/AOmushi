@@ -6,6 +6,7 @@ import random as rd
 import itertools as it
 import pandas as pd
 import os
+from datetime import datetime as dt
 
 '''
 TODO:
@@ -44,10 +45,16 @@ class App:
 
     def __init__(self):
         if (os.path.exists(FILE_DIR+RESULT_FILE_PATH)):
-            readRankData = pd.read_csv(FILE_DIR+RESULT_FILE_PATH)
+            self.rankData_df = pd.read_csv(
+                FILE_DIR+RESULT_FILE_PATH, keep_default_na=False)
         else:
-            #ランキングデータの空配列を用意
+            # ランキングデータの空配列を用意
+            self.rankData_df = pd.DataFrame(
+                columns=['rank', 'name', 'score', 'datetime'])
             pass
+
+        #カラーローテーション用変数
+        self.__colorCycle = 0
 
         pyxel.init(144, 160, fps=60)
         self.mainInit()
@@ -64,6 +71,8 @@ class App:
             self.gameMain()
         elif self.__gameState == GAME_RESULT:
             self.gameResult()
+        elif self.__gameState == GAME_RANK:
+            self.gameRank()
         else:
             pass
 
@@ -71,6 +80,8 @@ class App:
         if pyxel.btnp(pyxel.KEY_ENTER):
             self.__gameState = GAME_PLAYING
             self.mainInit()
+        elif pyxel.btnp(pyxel.KEY_R):
+            self.__gameState = GAME_RANK
 
     def mainInit(self):
         self.__fieldSize = 16
@@ -134,10 +145,13 @@ class App:
             self.x = (self.x+self.__moveX)
             self.y = (self.y+self.__moveY)
 
+            # GameOver条件成立でリザルトへ遷移
             if (([self.x, self.y] in self.__snakeBody[1:]) or
                 (self.x < 0) or (self.x >= self.__fieldSize) or
                     (self.y < 0) or (self.y >= self.__fieldSize)):
                 self.__gameState = GAME_RESULT
+                # ランキング登録（名前登録画面を実装したら移す）
+                self.CreateRanking()
 
             self.__snakeBody.append([self.x, self.y])
 
@@ -151,6 +165,21 @@ class App:
         else:
             pass
 
+    def CreateRanking(self):
+        tempScore = {'rank': 0, 'name': 'NA', 'score': self.__score,
+                     'datetime': dt.now().strftime('%Y-%m-%d %H:%M:%S')}
+        self.rankData_df = self.rankData_df.append(
+            tempScore, ignore_index=True)
+        # スコアが大きい順でランキング化してrankに登録
+        _tempRank = self.rankData_df.score.rank(method='min', ascending=False)
+        self.rankData_df['rank'] = _tempRank
+        self.rankData_df['rank'] = self.rankData_df['rank'].astype('int64')
+        # rankで昇順ソート
+        self.rankData_df = self.rankData_df.sort_values('rank')
+        self.rankData_df = self.rankData_df.reset_index(drop=True)
+        # 結果を保存
+        self.rankData_df.to_csv(FILE_DIR+RESULT_FILE_PATH, index=False)
+
     def gameResult(self):
         if pyxel.btnp(pyxel.KEY_R):
             self.__gameState = GAME_PLAYING
@@ -158,10 +187,14 @@ class App:
         elif pyxel.btnp(pyxel.KEY_BACKSPACE):
             self.__gameState = GAME_TITLE
 
+    def gameRank(self):
+        if pyxel.btnp(pyxel.KEY_BACKSPACE):
+            self.__gameState = GAME_TITLE
+
     def draw(self):
         if self.__gameState == GAME_TITLE:
             pyxel.cls(0)
-            pyxel.text(pyxel.width/2-12, pyxel.height/2-20, "AOmushi", col=12)
+            pyxel.text(pyxel.width/2-12, pyxel.height/2-20, "AomushI", col=12)
             pyxel.text(pyxel.width/2-63, pyxel.height/2+20,
                        "Snakegame with Machine Learning.", col=10)
 
@@ -175,7 +208,8 @@ class App:
             pyxel.bltm(0+WALL_SHIFT, 0+WALL_SHIFT, 0, 0, 0,
                        self.__fieldSize, self.__fieldSize)
 
-            pyxel.blt(self.__snakeBody[-1][0]*8+WALL_SHIFT, self.__snakeBody[-1][1]*8+WALL_SHIFT, 0,8,8, 8,8,0)
+            pyxel.blt(self.__snakeBody[-1][0]*8+WALL_SHIFT,
+                      self.__snakeBody[-1][1]*8+WALL_SHIFT, 0, 8, 8, 8, 8, 0)
             for tempBody in self.__snakeBody[:-1]:
                 pyxel.blt(tempBody[0]*8+WALL_SHIFT, tempBody[1]
                           * 8+WALL_SHIFT, 0, 0, 8, 8, 8, 0)
@@ -190,6 +224,27 @@ class App:
                        "Score: " + str(self.__score), 6)
             pyxel.text(10, pyxel.height/2+30,
                        "Restert: R, Title: BackSpace", 6)
+
+        elif self.__gameState == GAME_RANK:
+            self.__colorCycle += 1
+            if(self.__colorCycle >=16):
+                self.__colorCycle=0
+            pyxel.cls(0)
+            pyxel.text(pyxel.width/2-15, 10, "Ranking", self.__colorCycle)
+            pyxel.text(5, 30, 'Rank', 7)
+            pyxel.text(30, 30, 'Score', 8)
+            pyxel.text(60, 30, 'Date', 9)
+
+            #スコア表示
+            #TODO 指定行のみスライスで抜いてイテレータでまわしたい（ランキング登録数に応じて、指定行をあとから決めたい）
+            for i, data in enumerate(self.rankData_df.loc[:5]):
+                # pyxel.text(5, 30+(i+1)*10, str(self.rankData_df['rank'][i]), 6)
+                # pyxel.text(30, 30+(i+1)*10, str(self.rankData_df['score'][i]), 6)
+                # pyxel.text(60, 30+(i+1)*10, str(self.rankData_df['datetime'][i]), 6)
+                pyxel.text(5, 30+(i+1)*10, str(data['rank'][0]), 6)
+                pyxel.text(30, 30+(i+1)*10, str(data['score'][0]), 6)
+                pyxel.text(60, 30+(i+1)*10, str(data['datetime'][0]), 6)
+
 
     def nextFood(self):
         # ↓で一致する座標だけTrueにできる
