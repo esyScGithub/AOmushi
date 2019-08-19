@@ -10,10 +10,8 @@ from datetime import datetime as dt
 
 '''
 TODO:
-スコア保存追加
-ランキング閲覧
+ゲーム進行に合わせたスピード調整
 コード整理（特にクラス化）
-
 
 '''
 
@@ -56,6 +54,15 @@ class App:
         #カラーローテーション用変数
         self.__colorCycle = 0
 
+        # ランキングページ管理
+        # 表示ページ
+        self.__rankingPageNum = 0
+        # ランキング登録数
+        self.__rankingLastNum = len(self.rankData_df)
+        # ランキングページに表示中の範囲
+        self.__rankingStartNum = 0
+        self.__rankingEndNum = 10
+
         pyxel.init(144, 160, fps=60)
         self.mainInit()
         self.__randBaseList = np.array(
@@ -81,6 +88,7 @@ class App:
             self.__gameState = GAME_PLAYING
             self.mainInit()
         elif pyxel.btnp(pyxel.KEY_R):
+            self.__rankingLastNum = len(self.rankData_df)
             self.__gameState = GAME_RANK
 
     def mainInit(self):
@@ -190,6 +198,17 @@ class App:
     def gameRank(self):
         if pyxel.btnp(pyxel.KEY_BACKSPACE):
             self.__gameState = GAME_TITLE
+        elif pyxel.btnp(pyxel.KEY_LEFT):
+            if self.__rankingPageNum > 0:
+                self.__rankingPageNum -= 1
+        elif pyxel.btnp(pyxel.KEY_RIGHT):
+            # ランキングがあるページまで加算できる。（-1は10で割り切れるときに、次ページが出るのを防いでいる）
+            if self.__rankingPageNum < ((self.__rankingLastNum-1)//10):
+                self.__rankingPageNum += 1
+        self.__rankingStartNum = self.__rankingPageNum * 10
+        self.__rankingEndNum = self.__rankingStartNum + 10
+        if self.__rankingEndNum > self.__rankingLastNum:
+            self.__rankingEndNum = self.__rankingLastNum
 
     def draw(self):
         if self.__gameState == GAME_TITLE:
@@ -236,14 +255,12 @@ class App:
             pyxel.text(60, 30, 'Date', 9)
 
             #スコア表示
-            #TODO 指定行のみスライスで抜いてイテレータでまわしたい（ランキング登録数に応じて、指定行をあとから決めたい）
-            for i, data in enumerate(self.rankData_df.loc[:5]):
-                # pyxel.text(5, 30+(i+1)*10, str(self.rankData_df['rank'][i]), 6)
-                # pyxel.text(30, 30+(i+1)*10, str(self.rankData_df['score'][i]), 6)
-                # pyxel.text(60, 30+(i+1)*10, str(self.rankData_df['datetime'][i]), 6)
-                pyxel.text(5, 30+(i+1)*10, str(data['rank'][0]), 6)
-                pyxel.text(30, 30+(i+1)*10, str(data['score'][0]), 6)
-                pyxel.text(60, 30+(i+1)*10, str(data['datetime'][0]), 6)
+            for i, data in enumerate(self.rankData_df[self.__rankingStartNum:self.__rankingEndNum].
+                iterrows()):
+                # iterrows->data dataは(index, Series)のTulpeになっている
+                pyxel.text(5, 30+(i+1)*10, str(data[1]['rank']), 6)
+                pyxel.text(30, 30+(i+1)*10, str(data[1]['score']), 6)
+                pyxel.text(60, 30+(i+1)*10, str(data[1]['datetime']), 6)
 
 
     def nextFood(self):
