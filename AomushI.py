@@ -10,9 +10,7 @@ from datetime import datetime as dt
 
 '''
 TODO:
-ゲーム進行に合わせたスピード調整
 コード整理（特にクラス化）
-
 '''
 
 # 定数定義
@@ -33,6 +31,15 @@ GAME_SETTING = 4
 
 # 壁サイズ（サイズ分動作領域をシフトする）
 WALL_SHIFT = 8
+
+# 移動速度
+# 初期値
+MOVE_SPEED_DEFAULT = 10
+# 最速値
+MOVE_SPEED_FAST = 3
+# 速度アップ閾値
+MOVE_SPEED_UP_TH = 5
+
 
 # 実行ファイルディレクトリ
 FILE_DIR = os.path.dirname(__file__)
@@ -100,7 +107,7 @@ class App:
         self.__moveY = 0
         self.__moveState = MOVE_RIGHT
         self.__inputKey = NONE
-        self.__moveSpeed = 7
+        self.__moveSpeed = MOVE_SPEED_DEFAULT
         self.__snakeBody = [[0, 0], ]
         self.__score = 0
         self.__foodPos = [rd.randint(
@@ -167,6 +174,9 @@ class App:
             if self.__snakeBody[-1] == self.__foodPos:
                 self.nextFood()
                 self.__score += 1
+                if self.__score % MOVE_SPEED_UP_TH == 0 and self.__moveSpeed > MOVE_SPEED_FAST:
+                    self.__moveSpeed -= 1
+                    
             else:
                 self.__snakeBody.pop(0)
 
