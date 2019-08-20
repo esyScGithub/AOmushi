@@ -70,6 +70,10 @@ class App:
         self.__rankingStartNum = 0
         self.__rankingEndNum = 10
 
+        # ゲットエフェクト用
+        self.__getEffectList = []
+
+
         pyxel.init(144, 160, fps=60)
         self.mainInit()
         self.__randBaseList = np.array(
@@ -115,6 +119,7 @@ class App:
 
     def gameMain(self):
         self.__moveStep += 1
+        self.getEffect()
 
         # ここで最終入力を記録するが、遷移は更新周期が来てから。
         if pyxel.btnp(pyxel.KEY_LEFT) and self.__moveState != MOVE_RIGHT:
@@ -174,6 +179,7 @@ class App:
             if self.__snakeBody[-1] == self.__foodPos:
                 self.nextFood()
                 self.__score += 1
+                self.getEffectAdd(self.__snakeBody[-1][0], self.__snakeBody[-1][1])
                 if self.__score % MOVE_SPEED_UP_TH == 0 and self.__moveSpeed > MOVE_SPEED_FAST:
                     self.__moveSpeed -= 1
                     
@@ -243,9 +249,16 @@ class App:
                 pyxel.blt(tempBody[0]*8+WALL_SHIFT, tempBody[1]
                           * 8+WALL_SHIFT, 0, 0, 8, 8, 8, 0)
 
+            for effect in self.__getEffectList:
+                pyxel.circb((effect['x']+1)*8+4, (effect['y']+1)*8+4, effect['r'], effect['col'])
+                if effect['r'] != 0:
+                    pyxel.circb((effect['x']+1)*8+4, (effect['y']+1)*8+4, effect['r']-1, effect['col'])
+
+
             pyxel.blt(self.__foodPos[0]*8+WALL_SHIFT,
                       self.__foodPos[1]*8+WALL_SHIFT, 0, 0, 16, 8, 8, 0)
             pyxel.text(0, 145, "Score: " + str(self.__score), 6)
+            pyxel.text(0, 153, "Speed: " + str(11 - self.__moveSpeed), 6)
 
         elif self.__gameState == GAME_RESULT:
             pyxel.cls(0)
@@ -283,6 +296,16 @@ class App:
         tempFoodPosReview = tempFoodPos.view(
             dtype='i,i').reshape(tempFoodPos.shape[0])
         self.__foodPos = list(np.random.choice(tempFoodPosReview))
+
+    def getEffectAdd(self, x, y):
+        self.__getEffectList.append({'x':x, 'y':y, 'r':0, 'col':8})
+
+    def getEffect(self):
+        for i, effect in enumerate(self.__getEffectList):
+            effect['r'] += 1
+            if effect['r'] >=20:
+                self.__getEffectList.pop(i)
+
 
 
 if __name__ == "__main__":
