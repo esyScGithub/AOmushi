@@ -254,7 +254,6 @@ class App:
                 if effect['r'] != 0:
                     pyxel.circb((effect['x']+1)*8+4, (effect['y']+1)*8+4, effect['r']-1, effect['col'])
 
-
             pyxel.blt(self.__foodPos[0]*8+WALL_SHIFT,
                       self.__foodPos[1]*8+WALL_SHIFT, 0, 0, 16, 8, 8, 0)
             pyxel.text(0, 145, "Score: " + str(self.__score), 6)
@@ -293,8 +292,7 @@ class App:
         # 全座標からスネークボディを除く座標を抽出
         tempFoodPos = self.__randBaseList[~np.in1d(self.__randBaseList.view(dtype='i,i').reshape(
             self.__randBaseList.shape[0]), tempSnakeBody.view(dtype='i,i').reshape(tempSnakeBody.shape[0]))]
-        tempFoodPosReview = tempFoodPos.view(
-            dtype='i,i').reshape(tempFoodPos.shape[0])
+        tempFoodPosReview = tempFoodPos.view(dtype='i,i').reshape(tempFoodPos.shape[0])
         self.__foodPos = list(np.random.choice(tempFoodPosReview))
 
     def getEffectAdd(self, x, y):
@@ -305,8 +303,6 @@ class App:
             effect['r'] += 1
             if effect['r'] >=20:
                 self.__getEffectList.pop(i)
-
-
 
 if __name__ == "__main__":
     App()
