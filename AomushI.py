@@ -1,5 +1,3 @@
-# -*- coding=utf-8 -*-
-
 import pyxel
 import numpy as np
 import random as rd
@@ -301,7 +299,7 @@ class App:
     def getEffect(self):
         for i, effect in enumerate(self.__getEffectList):
             effect['r'] += 1
-            if effect['r'] >=20:
+            if effect['r'] >=50:
                 self.__getEffectList.pop(i)
 
 if __name__ == "__main__":
