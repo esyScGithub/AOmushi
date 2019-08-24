@@ -230,6 +230,8 @@ class App:
             pyxel.text(pyxel.width/2-12, pyxel.height/2-20, "AomushI", col=12)
             pyxel.text(pyxel.width/2-63, pyxel.height/2+20,
                        "Snakegame with Machine Learning.", col=10)
+            pyxel.text( 10, pyxel.height-20, "HowTo -> Cursor Key: Snake move", col=7)
+            pyxel.text( 10, pyxel.height-10, "Enter: GameStart   R: Ranking", col=7)
 
         elif self.__gameState == GAME_PLAYING:
             pyxel.cls(1)
@@ -261,8 +263,8 @@ class App:
             pyxel.cls(0)
             pyxel.text(pyxel.width/2-15, pyxel.height/2,
                        "Score: " + str(self.__score), 6)
-            pyxel.text(10, pyxel.height/2+30,
-                       "Restert: R, Title: BackSpace", 6)
+            pyxel.text(30, pyxel.height/2+30,
+                       "R: Restert   BS: Title", 6)
 
         elif self.__gameState == GAME_RANK:
             self.__colorCycle += 1
@@ -273,6 +275,7 @@ class App:
             pyxel.text(5, 30, 'Rank', 7)
             pyxel.text(30, 30, 'Score', 8)
             pyxel.text(60, 30, 'Date', 9)
+            pyxel.text( 10, pyxel.height-10, "<-: Prev   ->: Next   BS: Title", col=7)
 
             #スコア表示
             for i, data in enumerate(self.rankData_df[self.__rankingStartNum:self.__rankingEndNum].
