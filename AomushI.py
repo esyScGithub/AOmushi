@@ -285,7 +285,6 @@ class App:
                 pyxel.text(30, 30+(i+1)*10, str(data[1]['score']), 6)
                 pyxel.text(60, 30+(i+1)*10, str(data[1]['datetime']), 6)
 
-
     def nextFood(self):
         # ↓で一致する座標だけTrueにできる
         # numpy.in1d(x.view(dtype='i,i').reshape(x.shape[0]),y.view(dtype='i,i').reshape(y.shape[0]))
