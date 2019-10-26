@@ -9,6 +9,7 @@ from datetime import datetime as dt
 '''
 TODO:
 コード整理（特にクラス化）
+追加課題：実際の操作に置き換えたときに、
 '''
 
 # 定数定義
@@ -44,8 +45,7 @@ FILE_DIR = os.path.dirname(__file__)
 RESULT_FILE_PATH = "/data/result.csv"
 
 
-class App:
-
+class SnakeGameApp:
     def __init__(self):
         if (os.path.exists(FILE_DIR+RESULT_FILE_PATH)):
             self.rankData_df = pd.read_csv(
@@ -72,12 +72,14 @@ class App:
         self.__getEffectList = []
 
 
-        pyxel.init(144, 160, fps=60)
         self.mainInit()
+        pyxel.init(144, 160, fps=60)
         self.__randBaseList = np.array(
             list(it.product(range(self.__fieldSize), range(self.__fieldSize))))
         self.__gameState = GAME_TITLE
         pyxel.load(FILE_DIR + "/AomushI.pyxres")
+    
+    def run(self):
         pyxel.run(self.update, self.draw)
 
     def update(self):
@@ -305,4 +307,5 @@ class App:
                 self.__getEffectList.pop(i)
 
 if __name__ == "__main__":
-    App()
+    SG = SnakeGameApp()
+    SG.run()
