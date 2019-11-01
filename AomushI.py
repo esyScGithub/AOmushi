@@ -148,46 +148,60 @@ class SnakeGameApp:
                 pass
             self.__inputKey = NONE
 
-            if self.__moveState == MOVE_LEFT:
-                self.__moveX = -1
-                self.__moveY = 0
-            elif self.__moveState == MOVE_RIGHT:
-                self.__moveX = 1
-                self.__moveY = 0
-            elif self.__moveState == MOVE_UP:
-                self.__moveX = 0
-                self.__moveY = -1
-            elif self.__moveState == MOVE_DOWN:
-                self.__moveX = 0
-                self.__moveY = 1
-
-            self.__moveStep %= self.__moveSpeed
-            self.x = (self.x+self.__moveX)
-            self.y = (self.y+self.__moveY)
-
-            # GameOver条件成立でリザルトへ遷移
-            if (([self.x, self.y] in self.__snakeBody[1:]) or
-                (self.x < 0) or (self.x >= self.__fieldSize) or
-                    (self.y < 0) or (self.y >= self.__fieldSize)):
-                self.__gameState = GAME_RESULT
-                # ランキング登録（名前登録画面を実装したら移す）
-                self.CreateRanking()
-
-            self.__snakeBody.append([self.x, self.y])
-
-            # foodPosが2行1列に対して、bodyが1行2列なので、inでTrueにならない
-            if self.__snakeBody[-1] == self.__foodPos:
-                self.nextFood()
-                self.__score += 1
-                self.getEffectAdd(self.__snakeBody[-1][0], self.__snakeBody[-1][1])
-                if self.__score % MOVE_SPEED_UP_TH == 0 and self.__moveSpeed > MOVE_SPEED_FAST:
-                    self.__moveSpeed -= 1
-                    
-            else:
-                self.__snakeBody.pop(0)
+            # ゲーム状態更新処理の呼び出し
+            self.updateGame() #戻り値は使用しない
 
         else:
             pass
+
+    def updateGame(self, mode="play"):
+        '''
+        ゲーム状態を更新する。
+        学習で、更新フレーム待ちなしでゲーム進行させるため、関数を独立
+        '''
+        # 学習用の終了フラグ（未終了で初期化）
+        self.__mlDone = False
+
+        if self.__moveState == MOVE_LEFT:
+            self.__moveX = -1
+            self.__moveY = 0
+        elif self.__moveState == MOVE_RIGHT:
+            self.__moveX = 1
+            self.__moveY = 0
+        elif self.__moveState == MOVE_UP:
+            self.__moveX = 0
+            self.__moveY = -1
+        elif self.__moveState == MOVE_DOWN:
+            self.__moveX = 0
+            self.__moveY = 1
+
+        self.__moveStep %= self.__moveSpeed
+        self.x = (self.x+self.__moveX)
+        self.y = (self.y+self.__moveY)
+
+        # foodPosが2行1列に対して、bodyが1行2列なので、inでTrueにならない
+        if self.__snakeBody[-1] == self.__foodPos:
+            self.nextFood()
+            self.__score += 1
+            self.getEffectAdd(self.__snakeBody[-1][0], self.__snakeBody[-1][1])
+            if self.__score % MOVE_SPEED_UP_TH == 0 and self.__moveSpeed > MOVE_SPEED_FAST:
+                self.__moveSpeed -= 1
+                
+        else:
+            self.__snakeBody.pop(0)
+
+        # GameOver条件成立でリザルトへ遷移
+        if (([self.x, self.y] in self.__snakeBody[1:]) or
+            (self.x < 0) or (self.x >= self.__fieldSize) or
+                (self.y < 0) or (self.y >= self.__fieldSize)):
+            if mode == "play":
+                self.__gameState = GAME_RESULT
+                # ランキング登録（名前登録画面を実装したら移す）
+                self.CreateRanking()
+            else:
+                self.__mlDone = True
+
+        self.__snakeBody.append([self.x, self.y])
 
     def CreateRanking(self):
         tempScore = {'rank': 0, 'name': 'NA', 'score': self.__score,
@@ -305,6 +319,33 @@ class SnakeGameApp:
             effect['r'] += 1
             if effect['r'] >=50:
                 self.__getEffectList.pop(i)
+
+
+    #
+    # 学習用メソッド
+    #
+
+    def step(self, action):
+        self.__moveState = action
+        self.__reward = 0
+
+
+        # 報酬の与え方をどう実装するか？
+        # 報酬のルール
+        '''
+        餌をたべた(+++)：
+        ゲームオーバーになった(---)：
+        近づいた？(+)：
+        時間経過(-)：
+        '''
+        self.__mlDone = self.updateGame(action)
+        self.__mlObs = [] # ここに座標の状態を突っ込む( 16x16 )
+
+
+
+        return self.__mlObs, self.__mlReward, self.__mlDone
+
+
 
 if __name__ == "__main__":
     SG = SnakeGameApp()
