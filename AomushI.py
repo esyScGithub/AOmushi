@@ -44,8 +44,13 @@ MOVE_SPEED_UP_TH = 5
 FILE_DIR = os.path.dirname(__file__)
 RESULT_FILE_PATH = "/data/result.csv"
 
+# Reward Setting
+REWARD_GET_FOOD = 1000
+REWARD_TIME = 0
+REWARD_END = -100
 
 class SnakeGameApp:
+
     def __init__(self):
         if (os.path.exists(FILE_DIR+RESULT_FILE_PATH)):
             self.rankData_df = pd.read_csv(
@@ -116,6 +121,8 @@ class SnakeGameApp:
         self.__score = 0
         self.__foodPos = [rd.randint(
             0, self.__fieldSize-1), rd.randint(0, self.__fieldSize-1)]
+        self.__l1NormSnakeToFood = np.linalg.norm(np.array(self.__snakeBody[-1]) - np.array(self.__foodPos), ord=1)
+        self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood
 
     def gameMain(self):
         self.__moveStep += 1
@@ -161,6 +168,7 @@ class SnakeGameApp:
         '''
         # 学習用の終了フラグ（未終了で初期化）
         self.__mlDone = False
+        self.__mlReward = REWARD_TIME
 
         if self.__moveState == MOVE_LEFT:
             self.__moveX = -1
@@ -186,10 +194,10 @@ class SnakeGameApp:
             self.getEffectAdd(self.__snakeBody[-1][0], self.__snakeBody[-1][1])
             if self.__score % MOVE_SPEED_UP_TH == 0 and self.__moveSpeed > MOVE_SPEED_FAST:
                 self.__moveSpeed -= 1
-                
+            self.__mlReward += REWARD_GET_FOOD # 最長経路が256マスなので食べたら必ず0以上になるようにする
         else:
             self.__snakeBody.pop(0)
-
+        
         # GameOver条件成立でリザルトへ遷移
         if (([self.x, self.y] in self.__snakeBody[1:]) or
             (self.x < 0) or (self.x >= self.__fieldSize) or
@@ -200,6 +208,7 @@ class SnakeGameApp:
                 self.CreateRanking()
             else:
                 self.__mlDone = True
+                self.__mlReward = REWARD_END
 
         self.__snakeBody.append([self.x, self.y])
 
@@ -320,15 +329,21 @@ class SnakeGameApp:
             if effect['r'] >=50:
                 self.__getEffectList.pop(i)
 
-
     #
     # 学習用メソッド
     #
 
+    def reset(self):
+        self.mainInit()
+        self.__mlObs = np.zeros((16,16), dtype=int)
+        self.__mlObs[0,0] = 1
+        fp = np.array(self.__foodPos).T
+        self.__mlObs[fp[0], fp[1]] = 2 # エサの座標を2に設定
+
+        return self.__mlObs
+
     def step(self, action):
         self.__moveState = action
-        self.__reward = 0
-
 
         # 報酬の与え方をどう実装するか？
         # 報酬のルール
@@ -338,14 +353,37 @@ class SnakeGameApp:
         近づいた？(+)：
         時間経過(-)：
         '''
-        self.__mlDone = self.updateGame(action)
-        self.__mlObs = [] # ここに座標の状態を突っ込む( 16x16 )
 
+        self.updateGame(mode="ml")
 
+        # Obs（状態）作成
+        # print(self.__snakeBody)
+        # print(f'done={self.__mlDone}')
+        sb = np.array(self.__snakeBody).T
+        # print(f'sb:{sb}')
+        fp = np.array(self.__foodPos).T
+        # print(f'fp:{fp}')
+        if self.__mlDone == False:
+            self.__mlObs = np.zeros((16,16), dtype=int)
+            self.__mlObs[sb[0], sb[1]] = 1 # SnakeBodyの座標を1に設定
+            self.__mlObs[fp[0], fp[1]] = 2 # エサの座標を2に設定
+        else:
+            self.__mlObs = np.zeros((16,16), dtype=int)
+            self.__mlObs[:,:] = 9
+
+        self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood
+        self.__l1NormSnakeToFood = np.linalg.norm(np.array(self.__snakeBody[-1]) - np.array(self.__foodPos), ord=1)
+
+        # 前回距離から今回距離を引いて、近くなっていれば報酬1、離れていれば-1
+        self.__mlReward += (self.__l1NormSnakeToFoodBefore - self.__l1NormSnakeToFood)
+
+        # print(f'{self.__mlObs}')
 
         return self.__mlObs, self.__mlReward, self.__mlDone
 
-
+    def actionSample(self):
+        action = np.array([0,1,2,3])
+        return np.random.choice(action)
 
 if __name__ == "__main__":
     SG = SnakeGameApp()
