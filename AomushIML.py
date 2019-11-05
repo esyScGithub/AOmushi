@@ -4,6 +4,7 @@ import chainer.links as L
 import chainerrl
 import numpy as np
 from matplotlib import pyplot
+import pickle
 import AomushI as ai
 
 # 環境名を指定して、環境インスタンスを作成
@@ -15,13 +16,14 @@ obs = aomushiEnv.reset()
 
 class QFunction(chainer.Chain):
 
-    def __init__(self, obs_size, n_actions, n_hidden_channels=50):
+    def __init__(self, obs_size, n_actions, n_hidden_channels=80):
         super().__init__()
         with self.init_scope():
             # 各層の数を定義している。以下の場合は4レイヤー構造。
             self.l0 = L.Linear(obs_size, n_hidden_channels)
             self.l1 = L.Linear(n_hidden_channels, n_hidden_channels)
-            self.l2 = L.Linear(n_hidden_channels, n_actions)
+            self.l2 = L.Linear(n_hidden_channels, n_hidden_channels)
+            self.l3 = L.Linear(n_hidden_channels, n_actions)
 
     def __call__(self, x, test=False):
         """
@@ -31,7 +33,8 @@ class QFunction(chainer.Chain):
         """
         h = F.relu(self.l0(x))
         h = F.relu(self.l1(h))
-        return chainerrl.action_value.DiscreteActionValue(self.l2(h))
+        h = F.relu(self.l2(h))
+        return chainerrl.action_value.DiscreteActionValue(self.l3(h))
 
 # 環境サイズとアクションのサイズを取得して、InputとOutputのノード数を決める。
 obs_size = obs.reshape(1,-1).shape[1]
@@ -56,7 +59,7 @@ optimizer = chainer.optimizers.Adam(eps=1e-4)
 optimizer.setup(q_func)
 
 # Set the discount factor that discounts future rewards.
-gamma = 0.95
+gamma = 0.1
 
 # Use epsilon-greedy for exploration
 explorer = chainerrl.explorers.ConstantEpsilonGreedy(
@@ -84,6 +87,10 @@ max_episode_len = 20000
 
 rewards = []
 
+bestReward = -100
+bestData = []
+tempBestData =[]
+
 for i in range(1, n_episodes + 1):
     obs = aomushiEnv.reset()
     reward = 0
@@ -98,15 +105,27 @@ for i in range(1, n_episodes + 1):
         R += reward
         t += 1
         # aomushiEnv.render()  #追記；学習途中の様子も描画する
+        # 過程を保存する
+        tempBestData.append(obs)
+
     if i % 10 == 0:
         print('episode:', i,
               'R:', R,
               'statistics:', agent.get_statistics())
+            
     agent.stop_episode_and_train(obs, reward, done)
+
+    if bestReward < R:
+        bestReward = R
+        bestData = tempBestData
+        
     rewards.append(R)
 # aomushiEnv.render()
 
 pyplot.plot(range(len(rewards)),rewards)
 pyplot.show()
 
+f = open('bestResult.txt', 'w')
+pickle.dump(bestData, f)
+f.close()
 print('Finished.')

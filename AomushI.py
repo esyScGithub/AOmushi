@@ -365,8 +365,9 @@ class SnakeGameApp:
         # print(f'fp:{fp}')
         if self.__mlDone == False:
             self.__mlObs = np.zeros((16,16), dtype=int)
-            self.__mlObs[sb[0], sb[1]] = 1 # SnakeBodyの座標を1に設定
-            self.__mlObs[fp[0], fp[1]] = 2 # エサの座標を2に設定
+            self.__mlObs[sb[0], sb[1]] = 2 # SnakeBodyの座標を2に設定
+            self.__mlObs[self.__snakeBody[-1][0], self.__snakeBody[-1][1]] = 1 # SnakeBodyHeadの座標を1に設定
+            self.__mlObs[fp[0], fp[1]] = 3 # エサの座標を3に設定
         else:
             self.__mlObs = np.zeros((16,16), dtype=int)
             self.__mlObs[:,:] = 9
