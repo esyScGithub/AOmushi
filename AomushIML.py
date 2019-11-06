@@ -62,8 +62,10 @@ optimizer.setup(q_func)
 gamma = 0.1
 
 # Use epsilon-greedy for exploration
-explorer = chainerrl.explorers.ConstantEpsilonGreedy(
-    epsilon=0.3, random_action_func=aomushiEnv.actionSample)
+# explorer = chainerrl.explorers.ConstantEpsilonGreedy(
+#     epsilon=0.3, random_action_func=aomushiEnv.actionSample)
+
+explorer = chainerrl.explorers.LinearDecayEpsilonGreedy(start_epsilon=0.3, end_epsilon=0, decay_steps= 500, random_action_func=aomushiEnv.actionSample)
 
 # DQN uses Experience Replay.
 # Specify a replay buffer and its capacity.
@@ -82,7 +84,7 @@ agent = chainerrl.agents.DoubleDQN(
 
 print("CP3")
 
-n_episodes = 10000
+n_episodes = 2000
 max_episode_len = 20000
 
 rewards = []

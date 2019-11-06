@@ -129,13 +129,13 @@ class SnakeGameApp:
         self.getEffect()
 
         # ここで最終入力を記録するが、遷移は更新周期が来てから。
-        if pyxel.btnp(pyxel.KEY_LEFT) and self.__moveState != MOVE_RIGHT:
+        if pyxel.btnp(pyxel.KEY_LEFT):
             self.__inputKey = MOVE_LEFT
-        elif pyxel.btnp(pyxel.KEY_RIGHT) and self.__moveState != MOVE_LEFT:
+        elif pyxel.btnp(pyxel.KEY_RIGHT):
             self.__inputKey = MOVE_RIGHT
-        elif pyxel.btnp(pyxel.KEY_UP) and self.__moveState != MOVE_DOWN:
+        elif pyxel.btnp(pyxel.KEY_UP):
             self.__inputKey = MOVE_UP
-        elif pyxel.btnp(pyxel.KEY_DOWN) and self.__moveState != MOVE_UP:
+        elif pyxel.btnp(pyxel.KEY_DOWN):
             self.__inputKey = MOVE_DOWN
 
         if pyxel.btnp(pyxel.KEY_BACKSPACE):
@@ -143,17 +143,6 @@ class SnakeGameApp:
 
         # 更新タイミングの判定、更新する場合は更新処理。
         if (self.__moveStep // self.__moveSpeed) >= 1:
-            if self.__inputKey == MOVE_LEFT:
-                self.__moveState = MOVE_LEFT
-            elif self.__inputKey == MOVE_RIGHT:
-                self.__moveState = MOVE_RIGHT
-            elif self.__inputKey == MOVE_UP:
-                self.__moveState = MOVE_UP
-            elif self.__inputKey == MOVE_DOWN:
-                self.__moveState = MOVE_DOWN
-            else:
-                pass
-            self.__inputKey = NONE
 
             # ゲーム状態更新処理の呼び出し
             self.updateGame() #戻り値は使用しない
@@ -169,6 +158,18 @@ class SnakeGameApp:
         # 学習用の終了フラグ（未終了で初期化）
         self.__mlDone = False
         self.__mlReward = REWARD_TIME
+
+        if self.__inputKey == MOVE_LEFT and self.__moveState != MOVE_RIGHT:
+            self.__moveState = MOVE_LEFT
+        elif self.__inputKey == MOVE_RIGHT and self.__moveState != MOVE_LEFT:
+            self.__moveState = MOVE_RIGHT
+        elif self.__inputKey == MOVE_UP and self.__moveState != MOVE_DOWN:
+            self.__moveState = MOVE_UP
+        elif self.__inputKey == MOVE_DOWN and self.__moveState != MOVE_UP:
+            self.__moveState = MOVE_DOWN
+        else:
+            pass
+        self.__inputKey = NONE
 
         if self.__moveState == MOVE_LEFT:
             self.__moveX = -1
@@ -188,7 +189,8 @@ class SnakeGameApp:
         self.y = (self.y+self.__moveY)
 
         # foodPosが2行1列に対して、bodyが1行2列なので、inでTrueにならない
-        if self.__snakeBody[-1] == self.__foodPos:
+        if [self.x, self.y] == self.__foodPos:
+        # if self.__snakeBody[-1] == self.__foodPos:
             self.nextFood()
             self.__score += 1
             self.getEffectAdd(self.__snakeBody[-1][0], self.__snakeBody[-1][1])
@@ -199,7 +201,7 @@ class SnakeGameApp:
             self.__snakeBody.pop(0)
         
         # GameOver条件成立でリザルトへ遷移
-        if (([self.x, self.y] in self.__snakeBody[1:]) or
+        if (([self.x, self.y] in self.__snakeBody[:]) or
             (self.x < 0) or (self.x >= self.__fieldSize) or
                 (self.y < 0) or (self.y >= self.__fieldSize)):
             if mode == "play":
@@ -338,12 +340,12 @@ class SnakeGameApp:
         self.__mlObs = np.zeros((16,16), dtype=int)
         self.__mlObs[0,0] = 1
         fp = np.array(self.__foodPos).T
-        self.__mlObs[fp[0], fp[1]] = 2 # エサの座標を2に設定
+        self.__mlObs[fp[0], fp[1]] = 3 # エサの座標を2に設定
 
         return self.__mlObs
 
     def step(self, action):
-        self.__moveState = action
+        self.__inputKey = action
 
         # 報酬の与え方をどう実装するか？
         # 報酬のルール

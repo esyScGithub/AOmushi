@@ -57,16 +57,34 @@ class SnakeGameApp:
         self.__playData = np.array(pickle.load(f))
         f.close()
         self.__fieldSize = 16
-        self.__index = -1
-        pyxel.init(144, 160, fps=10)
+        self.__index = 0
+        self.__startFlag = False
+        pyxel.init(144, 160, fps=8)
         pyxel.load(FILE_DIR + "/AomushI.pyxres")
-    
+
     def run(self):
         pyxel.run(self.update, self.draw)
 
     def update(self):
-        self.__index += 1
-        pass
+        if pyxel.btnp(pyxel.KEY_ENTER):
+            self.__startFlag = True
+        elif pyxel.btnp(pyxel.KEY_SPACE):
+            self.__startFlag = False
+
+        if len(self.__playData)-1 > self.__index and self.__startFlag == True:
+            self.__index += 1
+        else:
+            self.__startFlag = False
+
+        if pyxel.btnp(pyxel.KEY_UP) and self.__index > 0:
+            self.__index -= 1
+        elif pyxel.btnp(pyxel.KEY_DOWN) and len(self.__playData)-1 > self.__index:
+            self.__index += 1
+        
+        if pyxel.btnp(pyxel.KEY_R):
+            self.__index = 0
+            self.__startFlag = False
+
 
     def draw(self):
         pyxel.cls(1)
@@ -97,6 +115,9 @@ class SnakeGameApp:
         for index in range(len(temp[0])):
             pyxel.blt(temp[0][index]*8+WALL_SHIFT,
                         temp[1][index]*8+WALL_SHIFT, 0, 0, 16, 8, 8, 0)
+        
+        pyxel.text(0, 145, "Frame: " + str(self.__index) + ' / ' + str(len(self.__playData)-1), 6)
+        
         # pyxel.text(0, 145, "Score: " + str(self.__score), 6)
         # pyxel.text(0, 153, "Speed: " + str(11 - self.__moveSpeed), 6)
 
