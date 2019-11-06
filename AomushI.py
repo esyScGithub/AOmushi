@@ -370,7 +370,7 @@ class SnakeGameApp:
             self.__mlObs[fp[0], fp[1]] = 3 # エサの座標を3に設定
         else:
             self.__mlObs = np.zeros((16,16), dtype=int)
-            self.__mlObs[:,:] = 9
+            # self.__mlObs[:,:] = 9
 
         self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood
         self.__l1NormSnakeToFood = np.linalg.norm(np.array(self.__snakeBody[-1]) - np.array(self.__foodPos), ord=1)

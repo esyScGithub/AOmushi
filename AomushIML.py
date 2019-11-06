@@ -50,12 +50,12 @@ q_func = QFunction(obs_size, n_actions)
 
 print("CP2")
 
-_q_func = chainerrl.q_functions.FCStateQFunctionWithDiscreteAction(
-    obs_size, n_actions,
-    n_hidden_layers=2, n_hidden_channels=50)
+# _q_func = chainerrl.q_functions.FCStateQFunctionWithDiscreteAction(
+#     obs_size, n_actions,
+#     n_hidden_layers=2, n_hidden_channels=50)
 
 # Use Adam to optimize q_func. eps=1e-2 is for stability.
-optimizer = chainer.optimizers.Adam(eps=1e-4)
+optimizer = chainer.optimizers.Adam(eps=1e-3)
 optimizer.setup(q_func)
 
 # Set the discount factor that discounts future rewards.
@@ -82,21 +82,22 @@ agent = chainerrl.agents.DoubleDQN(
 
 print("CP3")
 
-n_episodes = 2000
+n_episodes = 10000
 max_episode_len = 20000
 
 rewards = []
 
 bestReward = -100
 bestData = []
-tempBestData =[]
 
 for i in range(1, n_episodes + 1):
     obs = aomushiEnv.reset()
+    tempBestData =[]
+    tempBestData.append(obs)
     reward = 0
     done = False
     R = 0  # return (sum of rewards)
-    t = 0  # time step
+    t = 0   # time step
     while not done and t < max_episode_len:
         # Uncomment to watch the behaviour
         # aomushiEnv.render()
@@ -122,10 +123,16 @@ for i in range(1, n_episodes + 1):
     rewards.append(R)
 # aomushiEnv.render()
 
+
+f = open('bestResult.txt', 'wb')
+pickle.dump(bestData, f)
+f.close()
+
+f = open('resultReward.txt', 'wb')
+pickle.dump(rewards, f)
+f.close()
+
 pyplot.plot(range(len(rewards)),rewards)
 pyplot.show()
 
-f = open('bestResult.txt', 'w')
-pickle.dump(bestData, f)
-f.close()
 print('Finished.')
