@@ -53,12 +53,12 @@ REWARD_END = -100
 class SnakeGameApp:
 
     def __init__(self):
-        f = open('bestResult.txt','r')
-        self._playData = pickle.load(f)
+        f = open('bestResult.txt','rb')
+        self.__playData = np.array(pickle.load(f))
         f.close()
         self.__fieldSize = 16
         self.__index = -1
-        pyxel.init(144, 160, fps=60)
+        pyxel.init(144, 160, fps=10)
         pyxel.load(FILE_DIR + "/AomushI.pyxres")
     
     def run(self):
@@ -81,18 +81,24 @@ class SnakeGameApp:
                     self.__fieldSize, self.__fieldSize)
 
         # snake
-        pyxel.blt(self.__snakeBody[-1][0]*8+WALL_SHIFT,
-                    self.__snakeBody[-1][1]*8+WALL_SHIFT, 0, 8, 8, 8, 8, 0)
+        temp = np.where(self.__playData[self.__index]==1)
+        for index in range(len(temp[0])):
+            pyxel.blt(temp[0][index]*8+WALL_SHIFT,
+                        temp[1][index]*8+WALL_SHIFT, 0, 8, 8, 8, 8, 0)
         #頭の位置も区別したほうがよさそう。
-        # for tempBody in self.__snakeBody[:-1]:
-        #     pyxel.blt(tempBody[0]*8+WALL_SHIFT, tempBody[1]
-        #                 * 8+WALL_SHIFT, 0, 0, 8, 8, 8, 0)
+        
+        temp = np.where(self.__playData[self.__index]==2)
+        for index in range(len(temp[0])):
+            pyxel.blt(temp[0][index]*8+WALL_SHIFT, temp[1][index]
+                        * 8+WALL_SHIFT, 0, 0, 8, 8, 8, 0)
 
         # food
-        pyxel.blt(self.__foodPos[0]*8+WALL_SHIFT,
-                    self.__foodPos[1]*8+WALL_SHIFT, 0, 0, 16, 8, 8, 0)
-        pyxel.text(0, 145, "Score: " + str(self.__score), 6)
-        pyxel.text(0, 153, "Speed: " + str(11 - self.__moveSpeed), 6)
+        temp = np.where(self.__playData[self.__index]==3)
+        for index in range(len(temp[0])):
+            pyxel.blt(temp[0][index]*8+WALL_SHIFT,
+                        temp[1][index]*8+WALL_SHIFT, 0, 0, 16, 8, 8, 0)
+        # pyxel.text(0, 145, "Score: " + str(self.__score), 6)
+        # pyxel.text(0, 153, "Speed: " + str(11 - self.__moveSpeed), 6)
 
 
 if __name__ == "__main__":
