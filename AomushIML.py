@@ -8,7 +8,7 @@ import pickle
 import AomushI as ai
 
 # 環境名を指定して、環境インスタンスを作成
-aomushiEnv = ai.SnakeGameApp()
+aomushiEnv = ai.SnakeGameCore()
 # aomushiEnv.run()
 
 # 環境を初期化（戻り値で、初期状態の観測データobservationが取得できる）
@@ -41,7 +41,7 @@ ER_capacity=10 ** 6
 
 # training number
 # 学習回数
-n_episodes = 30000
+n_episodes = 200
 # 1回のプレイの最大フレーム数
 max_episode_len = 20000
 

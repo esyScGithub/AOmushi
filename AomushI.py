@@ -49,17 +49,10 @@ REWARD_GET_FOOD = 1000
 REWARD_TIME = 0
 REWARD_END = -100
 
-class SnakeGameApp:
-
+class SnakeGameCore:
     def __init__(self):
-        if (os.path.exists(FILE_DIR+RESULT_FILE_PATH)):
-            self.rankData_df = pd.read_csv(
-                FILE_DIR+RESULT_FILE_PATH, keep_default_na=False)
-        else:
-            # ランキングデータの空配列を用意
-            self.rankData_df = pd.DataFrame(
-                columns=['rank', 'name', 'score', 'datetime'])
-            pass
+        self.rankData_df = pd.DataFrame(
+            columns=['rank', 'name', 'score', 'datetime'])
 
         #カラーローテーション用変数
         self.__colorCycle = 0
@@ -76,13 +69,10 @@ class SnakeGameApp:
         # ゲットエフェクト用
         self.__getEffectList = []
 
-
         self.mainInit()
-        pyxel.init(144, 160, fps=60)
         self.__randBaseList = np.array(
             list(it.product(range(self.__fieldSize), range(self.__fieldSize))))
         self.__gameState = GAME_TITLE
-        pyxel.load(FILE_DIR + "/AomushI.pyxres")
     
     def run(self):
         pyxel.run(self.update, self.draw)
@@ -387,6 +377,22 @@ class SnakeGameApp:
     def actionSample(self):
         action = np.array([0,1,2,3])
         return np.random.choice(action)
+
+class SnakeGameApp(SnakeGameCore):
+
+    def __init__(self):
+        super().__init__()
+        if (os.path.exists(FILE_DIR+RESULT_FILE_PATH)):
+            self.rankData_df = pd.read_csv(
+                FILE_DIR+RESULT_FILE_PATH, keep_default_na=False)
+        else:
+            # ランキングデータの空配列を用意
+            self.rankData_df = pd.DataFrame(
+                columns=['rank', 'name', 'score', 'datetime'])
+            pass
+
+        pyxel.init(144, 160, fps=60)
+        pyxel.load(FILE_DIR + "/AomushI.pyxres")
 
 if __name__ == "__main__":
     SG = SnakeGameApp()
