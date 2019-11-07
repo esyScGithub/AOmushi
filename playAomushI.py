@@ -50,10 +50,10 @@ REWARD_GET_FOOD = 1000
 REWARD_TIME = 0
 REWARD_END = -100
 
-class SnakeGameApp:
+class SnakeGamePlayer:
 
     def __init__(self):
-        f = open('bestResult.txt','rb')
+        f = open('bestResult_20191107.txt','rb')
         self.__playData = np.array(pickle.load(f))
         f.close()
         self.__fieldSize = 16
@@ -76,9 +76,9 @@ class SnakeGameApp:
         else:
             self.__startFlag = False
 
-        if pyxel.btnp(pyxel.KEY_UP) and self.__index > 0:
+        if pyxel.btn(pyxel.KEY_UP) and self.__index > 0:
             self.__index -= 1
-        elif pyxel.btnp(pyxel.KEY_DOWN) and len(self.__playData)-1 > self.__index:
+        elif pyxel.btn(pyxel.KEY_DOWN) and len(self.__playData)-1 > self.__index:
             self.__index += 1
         
         if pyxel.btnp(pyxel.KEY_R):
@@ -123,5 +123,5 @@ class SnakeGameApp:
 
 
 if __name__ == "__main__":
-    SG = SnakeGameApp()
+    SG = SnakeGamePlayer()
     SG.run()

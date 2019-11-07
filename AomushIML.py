@@ -14,6 +14,37 @@ aomushiEnv = ai.SnakeGameApp()
 # 環境を初期化（戻り値で、初期状態の観測データobservationが取得できる）
 obs = aomushiEnv.reset()
 
+# パラメータ設定
+# Adam
+adam_eps = 1e-3
+
+# ε-greedy
+start_epsilon=0.3
+end_epsilon=0
+decay_steps= 500
+
+# NN
+# 活性化関数、レイヤー数、ノード数はコード直で変更
+# 以下は結果出力用
+hidden_layer = 3
+hidden_nodes = 80
+kaseika_func = 'relu'
+
+# DQN(DDQN)
+gamma = 0.1
+replay_start_size=500
+update_interval=1
+target_update_interval=100
+
+## E reply
+ER_capacity=10 ** 6
+
+# training number
+# 学習回数
+n_episodes = 30000
+# 1回のプレイの最大フレーム数
+max_episode_len = 20000
+
 class QFunction(chainer.Chain):
 
     def __init__(self, obs_size, n_actions, n_hidden_channels=80):
@@ -84,8 +115,7 @@ agent = chainerrl.agents.DoubleDQN(
 
 print("CP3")
 
-n_episodes = 2000
-max_episode_len = 20000
+
 
 rewards = []
 
