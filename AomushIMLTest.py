@@ -3,7 +3,6 @@ import chainer.functions as F
 import chainer.links as L
 import chainerrl
 import numpy as np
-from matplotlib import pyplot
 import pickle
 import AomushI as ai
 

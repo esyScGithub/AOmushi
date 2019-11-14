@@ -5,6 +5,7 @@ import itertools as it
 import pandas as pd
 import os
 from datetime import datetime as dt
+import chainerrl
 
 '''
 TODO:
@@ -23,10 +24,11 @@ NONE = 4
 
 # ゲーム状態
 GAME_TITLE = 0
-GAME_PLAYING = 1
+GAME_PLAYING_USER = 1
 GAME_RESULT = 2
 GAME_RANK = 3
 GAME_SETTING = 4
+GAME_PLAYING_AI = 5
 
 # 壁サイズ（サイズ分動作領域をシフトする）
 WALL_SHIFT = 8
@@ -80,8 +82,10 @@ class SnakeGameCore:
     def update(self):
         if self.__gameState == GAME_TITLE:
             self.gameTitle()
-        elif self.__gameState == GAME_PLAYING:
-            self.gameMain()
+        elif self.__gameState == GAME_PLAYING_USER:
+            self.gameMain(mode='user')
+        elif self.__gameState == GAME_PLAYING_AI:
+            self.gameMain(mode='ai')
         elif self.__gameState == GAME_RESULT:
             self.gameResult()
         elif self.__gameState == GAME_RANK:
@@ -91,13 +95,16 @@ class SnakeGameCore:
 
     def gameTitle(self):
         if pyxel.btnp(pyxel.KEY_ENTER):
-            self.__gameState = GAME_PLAYING
+            self.__gameState = GAME_PLAYING_USER
             self.mainInit()
         elif pyxel.btnp(pyxel.KEY_R):
             self.__rankingLastNum = len(self.rankData_df)
             self.__gameState = GAME_RANK
+        elif pyxel.btnp(pyxel.KEY_A):
+            self.__gameState = GAME_PLAYING_AI
+            self.mainInit()
 
-    def mainInit(self):
+    def mainInit(self,mode='user'):
         self.__fieldSize = 16
         self.x = 0
         self.y = 0
@@ -114,19 +121,23 @@ class SnakeGameCore:
         self.__l1NormSnakeToFood = np.linalg.norm(np.array(self.__snakeBody[-1]) - np.array(self.__foodPos), ord=1)
         self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood
 
-    def gameMain(self):
+        if mode == 'ai':
+            agent = chainerrl.
+
+    def gameMain(self, mode='user'):
         self.__moveStep += 1
         self.getEffect()
 
         # ここで最終入力を記録するが、遷移は更新周期が来てから。
-        if pyxel.btnp(pyxel.KEY_LEFT):
-            self.__inputKey = MOVE_LEFT
-        elif pyxel.btnp(pyxel.KEY_RIGHT):
-            self.__inputKey = MOVE_RIGHT
-        elif pyxel.btnp(pyxel.KEY_UP):
-            self.__inputKey = MOVE_UP
-        elif pyxel.btnp(pyxel.KEY_DOWN):
-            self.__inputKey = MOVE_DOWN
+        if mode == 'user':
+            if pyxel.btnp(pyxel.KEY_LEFT):
+                self.__inputKey = MOVE_LEFT
+            elif pyxel.btnp(pyxel.KEY_RIGHT):
+                self.__inputKey = MOVE_RIGHT
+            elif pyxel.btnp(pyxel.KEY_UP):
+                self.__inputKey = MOVE_UP
+            elif pyxel.btnp(pyxel.KEY_DOWN):
+                self.__inputKey = MOVE_DOWN
 
         if pyxel.btnp(pyxel.KEY_BACKSPACE):
             self.__gameState = GAME_TITLE
@@ -135,12 +146,28 @@ class SnakeGameCore:
         if (self.__moveStep // self.__moveSpeed) >= 1:
 
             # ゲーム状態更新処理の呼び出し
-            self.updateGame() #戻り値は使用しない
+            self.updateGame(mode=mode) #戻り値は使用しない
 
         else:
             pass
 
-    def updateGame(self, mode="play"):
+    # def inputKeyboad(self):
+    #     # ここで最終入力を記録するが、遷移は更新周期が来てから。
+    #     if pyxel.btnp(pyxel.KEY_LEFT):
+    #         self.__inputKey = MOVE_LEFT
+    #     elif pyxel.btnp(pyxel.KEY_RIGHT):
+    #         self.__inputKey = MOVE_RIGHT
+    #     elif pyxel.btnp(pyxel.KEY_UP):
+    #         self.__inputKey = MOVE_UP
+    #     elif pyxel.btnp(pyxel.KEY_DOWN):
+    #         self.__inputKey = MOVE_DOWN
+
+    def inputAgent(self):
+        #agentからアクションをもらう
+        self.__inputKey=MOVE_DOWN
+        pass
+
+    def updateGame(self, mode="user"):
         '''
         ゲーム状態を更新する。
         学習で、更新フレーム待ちなしでゲーム進行させるため、関数を独立
@@ -148,6 +175,9 @@ class SnakeGameCore:
         # 学習用の終了フラグ（未終了で初期化）
         self.__mlDone = False
         self.__mlReward = REWARD_TIME
+
+        if mode=='ai':
+            self.inputAgent()
 
         if self.__inputKey == MOVE_LEFT and self.__moveState != MOVE_RIGHT:
             self.__moveState = MOVE_LEFT
@@ -194,10 +224,12 @@ class SnakeGameCore:
         if (([self.x, self.y] in self.__snakeBody[:]) or
             (self.x < 0) or (self.x >= self.__fieldSize) or
                 (self.y < 0) or (self.y >= self.__fieldSize)):
-            if mode == "play":
+            if mode == "user":
                 self.__gameState = GAME_RESULT
                 # ランキング登録（名前登録画面を実装したら移す）
                 self.CreateRanking()
+            elif mode == 'ai':
+                self.__gameState = GAME_RESULT
             else:
                 self.__mlDone = True
                 self.__mlReward = REWARD_END
@@ -221,10 +253,13 @@ class SnakeGameCore:
 
     def gameResult(self):
         if pyxel.btnp(pyxel.KEY_R):
-            self.__gameState = GAME_PLAYING
+            self.__gameState = GAME_PLAYING_USER
             self.mainInit()
         elif pyxel.btnp(pyxel.KEY_BACKSPACE):
             self.__gameState = GAME_TITLE
+        elif pyxel.btnp(pyxel.KEY_A):
+            self.__gameState = GAME_PLAYING_AI
+            self.mainInit()
 
     def gameRank(self):
         if pyxel.btnp(pyxel.KEY_BACKSPACE):
@@ -250,7 +285,7 @@ class SnakeGameCore:
             pyxel.text( 10, pyxel.height-20, "HowTo -> Cursor Key: Snake move", col=7)
             pyxel.text( 10, pyxel.height-10, "Enter: GameStart   R: Ranking", col=7)
 
-        elif self.__gameState == GAME_PLAYING:
+        elif self.__gameState == GAME_PLAYING_USER or self.__gameState == GAME_PLAYING_AI:
             pyxel.cls(1)
             for i in range(self.__fieldSize+2):
                 for j in range(self.__fieldSize+2):
