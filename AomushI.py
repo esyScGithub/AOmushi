@@ -328,9 +328,9 @@ class SnakeGameCore:
     def reset(self):
         self.mainInit()
         self.__mlObs = np.zeros((16,16), dtype=int)
-        self.__mlObs[0,0] = 1
+        self.__mlObs[0,0] = 1/3
         fp = np.array(self.__foodPos).T
-        self.__mlObs[fp[0], fp[1]] = 3 # エサの座標を2に設定
+        self.__mlObs[fp[0], fp[1]] = 3/3 # エサの座標を2に設定
 
         return self.__mlObs
 
@@ -356,12 +356,12 @@ class SnakeGameCore:
         fp = np.array(self.__foodPos).T
         # print(f'fp:{fp}')
         if self.__mlDone == False:
-            self.__mlObs = np.zeros((16,16), dtype=int)
-            self.__mlObs[sb[0], sb[1]] = 2 # SnakeBodyの座標を2に設定
-            self.__mlObs[self.__snakeBody[-1][0], self.__snakeBody[-1][1]] = 1 # SnakeBodyHeadの座標を1に設定
-            self.__mlObs[fp[0], fp[1]] = 3 # エサの座標を3に設定
+            self.__mlObs = np.zeros((16,16), dtype=np.float32)
+            self.__mlObs[sb[0], sb[1]] = 2/3 # SnakeBodyの座標を2に設定
+            self.__mlObs[self.__snakeBody[-1][0], self.__snakeBody[-1][1]] = 1/3 # SnakeBodyHeadの座標を1に設定
+            self.__mlObs[fp[0], fp[1]] = 3/3 # エサの座標を3に設定
         else:
-            self.__mlObs = np.zeros((16,16), dtype=int)
+            self.__mlObs = np.zeros((16,16), dtype=np.float32)
             # self.__mlObs[:,:] = 9
 
         self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood

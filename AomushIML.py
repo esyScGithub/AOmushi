@@ -19,8 +19,8 @@ obs = aomushiEnv.reset()
 adam_eps = 1e-3
 
 # ε-greedy
-start_epsilon=0.3
-end_epsilon=0
+start_epsilon=1
+end_epsilon=0.1
 decay_steps= 500
 
 # NN
@@ -31,7 +31,7 @@ hidden_nodes = 80
 kaseika_func = 'relu'
 
 # DQN(DDQN)
-gamma = 0.1
+gamma = 0.95
 replay_start_size=500
 update_interval=1
 target_update_interval=100
@@ -41,7 +41,7 @@ ER_capacity=10 ** 6
 
 # training number
 # 学習回数
-n_episodes = 200
+n_episodes = 2000
 # 1回のプレイの最大フレーム数
 max_episode_len = 20000
 
@@ -90,7 +90,7 @@ optimizer = chainer.optimizers.Adam(eps=1e-3)
 optimizer.setup(q_func)
 
 # Set the discount factor that discounts future rewards.
-gamma = 0.1
+# gamma = 0.1
 
 # Use epsilon-greedy for exploration
 # explorer = chainerrl.explorers.ConstantEpsilonGreedy(
@@ -141,11 +141,11 @@ for i in range(1, n_episodes + 1):
         # 過程を保存する
         tempBestData.append(obs)
 
-    if i % 10 == 0:
+    if i % 1 == 0:
         print('episode:', i,
               'R:', R,
               'statistics:', agent.get_statistics())
-            
+
     agent.stop_episode_and_train(obs, reward, done)
 
     if bestReward < R:
