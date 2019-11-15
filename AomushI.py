@@ -121,8 +121,8 @@ class SnakeGameCore:
         self.__l1NormSnakeToFood = np.linalg.norm(np.array(self.__snakeBody[-1]) - np.array(self.__foodPos), ord=1)
         self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood
 
-        if mode == 'ai':
-            agent = chainerrl.
+        # if mode == 'ai':
+            # agent = chainerrl.agents.
 
     def gameMain(self, mode='user'):
         self.__moveStep += 1
