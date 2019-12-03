@@ -27,7 +27,7 @@ decay_steps= 500
 # 活性化関数、レイヤー数、ノード数はコード直で変更
 # 以下は結果出力用
 hidden_layer = 3
-hidden_nodes = 80
+hidden_nodes = 200
 kaseika_func = 'relu'
 
 # DQN(DDQN)
@@ -41,7 +41,7 @@ ER_capacity=10 ** 6
 
 # training number
 # 学習回数
-n_episodes = 200
+n_episodes = 1000
 # 1回のプレイの最大フレーム数
 max_episode_len = 20000
 
