@@ -38,6 +38,7 @@ WALL_SHIFT = 8
 MOVE_SPEED_DEFAULT = 10
 # 最速値
 MOVE_SPEED_FAST = 3
+
 # 速度アップ閾値
 MOVE_SPEED_UP_TH = 5
 
@@ -241,11 +242,11 @@ class SnakeGameCore:
                      'datetime': dt.now().strftime('%Y-%m-%d %H:%M:%S')}
         self.rankData_df = self.rankData_df.append(
             tempScore, ignore_index=True)
-        # スコアが大きい順でランキング化してrankに登録
+        # スコアが大きい順でランキングを確定してrankに設定する
         _tempRank = self.rankData_df.score.rank(method='min', ascending=False)
         self.rankData_df['rank'] = _tempRank
         self.rankData_df['rank'] = self.rankData_df['rank'].astype('int64')
-        # rankで昇順ソート
+        # rankで昇順ソート（ここで、ランキング順に並ぶ）
         self.rankData_df = self.rankData_df.sort_values('rank')
         self.rankData_df = self.rankData_df.reset_index(drop=True)
         # 結果を保存
