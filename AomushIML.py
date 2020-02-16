@@ -7,6 +7,18 @@ from matplotlib import pyplot
 import pickle
 import AomushI as ai
 
+
+'''
+TODO 
+・agentの保存タイミングを増やす（回数or特定のスコア達成時）
+・学習パラメータを保存する
+・学習パラメータを自動で調整する
+・モデルを使った自動プレイの実装
+
+'''
+
+
+
 # 環境名を指定して、環境インスタンスを作成
 aomushiEnv = ai.SnakeGameCore()
 # aomushiEnv.run()
