@@ -6,6 +6,12 @@ import pandas as pd
 import os
 from datetime import datetime as dt
 import chainerrl
+import json
+import chainer
+import chainer.functions as F
+import chainer.links as L
+import chainerrl
+import AomushIAISetting
 
 '''
 TODO:
@@ -103,7 +109,7 @@ class SnakeGameCore:
             self.__gameState = GAME_RANK
         elif pyxel.btnp(pyxel.KEY_A):
             self.__gameState = GAME_PLAYING_AI
-            self.mainInit()
+            self.mainInit(mode='ai')
 
     def mainInit(self,mode='user'):
         self.__fieldSize = 16
@@ -122,8 +128,9 @@ class SnakeGameCore:
         self.__l1NormSnakeToFood = np.linalg.norm(np.array(self.__snakeBody[-1]) - np.array(self.__foodPos), ord=1)
         self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood
 
-        # if mode == 'ai':
-            # agent = chainerrl.agents.
+        if mode == 'ai':
+            # 環境設定
+            self.agent, paramDic = AomushIAISetting.AomushiModelRead(newModel=False)
 
     def gameMain(self, mode='user'):
         self.__moveStep += 1
@@ -165,7 +172,8 @@ class SnakeGameCore:
 
     def inputAgent(self):
         #agentからアクションをもらう
-        self.__inputKey=MOVE_DOWN
+        obs = self.makeObs()
+        self.__inputKey= self.agent.act(obs)
         pass
 
     def updateGame(self, mode="user"):
@@ -385,20 +393,7 @@ class SnakeGameCore:
         self.updateGame(mode="ml")
 
         # Obs（状態）作成
-        # print(self.__snakeBody)
-        # print(f'done={self.__mlDone}')
-        sb = np.array(self.__snakeBody).T
-        # print(f'sb:{sb}')
-        fp = np.array(self.__foodPos).T
-        # print(f'fp:{fp}')
-        if self.__mlDone == False:
-            self.__mlObs = np.zeros((16,16), dtype=np.float32)
-            self.__mlObs[sb[0], sb[1]] = 2/3 # SnakeBodyの座標を2に設定
-            self.__mlObs[self.__snakeBody[-1][0], self.__snakeBody[-1][1]] = 1/3 # SnakeBodyHeadの座標を1に設定
-            self.__mlObs[fp[0], fp[1]] = 3/3 # エサの座標を3に設定
-        else:
-            self.__mlObs = np.zeros((16,16), dtype=np.float32)
-            # self.__mlObs[:,:] = 9
+        self.__mlObs = self.makeObs()
 
         self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood
         self.__l1NormSnakeToFood = np.linalg.norm(np.array(self.__snakeBody[-1]) - np.array(self.__foodPos), ord=1)
@@ -409,6 +404,22 @@ class SnakeGameCore:
         # print(f'{self.__mlObs}')
 
         return self.__mlObs, self.__mlReward, self.__mlDone
+
+    def makeObs(self):
+        sb = np.array(self.__snakeBody).T
+        # print(f'sb:{sb}')
+        fp = np.array(self.__foodPos).T
+        # print(f'fp:{fp}')
+        if self.__mlDone == False:
+            obs = np.zeros((16,16), dtype=np.float32)
+            obs[sb[0], sb[1]] = 2/3 # SnakeBodyの座標を2に設定
+            obs[self.__snakeBody[-1][0], self.__snakeBody[-1][1]] = 1/3 # SnakeBodyHeadの座標を1に設定
+            obs[fp[0], fp[1]] = 3/3 # エサの座標を3に設定
+        else:
+            obs = np.zeros((16,16), dtype=np.float32)
+
+        return obs
+
 
     def actionSample(self):
         action = np.array([0,1,2,3])
