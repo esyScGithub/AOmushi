@@ -25,7 +25,7 @@ def AomushILarningMain():
     # list_adam_eps = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
     # list_gamma = [1-i*0.01 for i in range(1,8)]
     list_adam_eps = [1e-2]
-    list_gamma = [0.99]
+    list_gamma = [0.1]
 
     '''
     各パラメータの意味
@@ -69,9 +69,9 @@ def AomushILarningMain():
         for tempAdam, tempGamma in it.product(list_adam_eps, list_gamma):
             # パラメータ設定
             paramDic = {'adam_eps': tempAdam,
-                        'start_epsilon': 0.5,
+                        'start_epsilon': 1.0,
                         'end_epsilon': 0.3,
-                        'decay_steps': 500,
+                        'decay_steps': 10000,
                         'hidden_layer': 3,
                         'hidden_nodes': 200,
                         'kaseika_func': 'relu',
@@ -80,12 +80,11 @@ def AomushILarningMain():
                         'update_interval': 1,
                         'target_update_interval': 100,
                         'ER_capacity': 10 ** 4 * 2,
-                        'n_episodes': 50000,
+                        'n_episodes': 10000,
                         'max_episode_len': 50000
                         }
 
-            class QFunction(chainer.Chain):
-
+            class QFunctionLinear_3layer(chainer.Chain):
                 def __init__(self, obs_size, n_actions, n_hidden_channels=paramDic['hidden_nodes']):
                     super().__init__()
                     with self.init_scope():
@@ -106,12 +105,62 @@ def AomushILarningMain():
                     h = F.relu(self.l2(h))
                     return chainerrl.action_value.DiscreteActionValue(self.l3(h))
 
+            class QFunctionLinear_5layer(chainer.Chain):
+                def __init__(self, obs_size, n_actions, n_hidden_channels=paramDic['hidden_nodes']):
+                    super().__init__()
+                    with self.init_scope():
+                        # 各層の数を定義している。以下の場合は4レイヤー構造。
+                        self.l0 = L.Linear(obs_size, n_hidden_channels)
+                        self.l1 = L.Linear(n_hidden_channels, n_hidden_channels)
+                        self.l2 = L.Linear(n_hidden_channels, n_hidden_channels)
+                        self.l3 = L.Linear(n_hidden_channels, n_hidden_channels)
+                        self.l4 = L.Linear(n_hidden_channels, n_hidden_channels)
+                        self.l5 = L.Linear(n_hidden_channels, n_actions)
+
+                def __call__(self, x, test=False):
+                    """
+                    Args:
+                        x (ndarray or chainer.Variable): An observation
+                        test (bool): a flag indicating whether it is in test mode
+                    """
+                    h = F.relu(self.l0(x))
+                    h = F.relu(self.l1(h))
+                    h = F.relu(self.l2(h))
+                    h = F.relu(self.l3(h))
+                    h = F.relu(self.l4(h))
+                    return chainerrl.action_value.DiscreteActionValue(self.l5(h))
+
+            class QFunctionCNN(chainer.Chain):
+                def __init__(self, obs_size, n_actions, n_hidden_channels=paramDic['hidden_nodes']):
+                    super().__init__()
+                    with self.init_scope():
+                        # 各層の数を定義している。以下の場合は4レイヤー構造。
+                        self.conv1 = L.Convolution2D(1, 20, 5)
+                        self.conv2 = L.Convolution2D(20,50,5)
+                        self.l1 = L.Linear(800, 500)
+                        self.l2 = L.Linear(500, 500)
+                        self.l3 = L.Linear(500, n_actions)
+
+                def __call__(self, x, test=False):
+                    """
+                    Args:
+                        x (ndarray or chainer.Variable): An observation
+                        test (bool): a flag indicating whether it is in test mode
+                    """
+                    h = F.max_pooling_2d(F.relu(self.conv1(x)), 2)
+                    h = F.max_pooling_2d(F.relu(self.conv2(h)), 2)
+                    h = F.relu(self.l1(h))
+                    h = F.relu(self.l2(h))
+                    return chainerrl.action_value.DiscreteActionValue(self.l3(h))
+
             # 環境サイズとアクションのサイズを取得して、InputとOutputのノード数を決める。
             obs_size = obs.reshape(1,-1).shape[1]
             n_actions = 4
 
             # Q関数の定義
-            q_func = QFunction(obs_size, n_actions)
+            # q_func = QFunctionLinear_3layer(obs_size, n_actions)
+            # q_func = QFunctionLinear_5layer(obs_size, n_actions)
+            q_func = QFunctionCNN(obs_size, n_actions)
 
             # CUDAの使用。（使用する場合はコメントを外す）
             # q_func.to_gpu(0)
@@ -152,6 +201,7 @@ def AomushILarningMain():
                 bestAveDirPath = tempDirPath
 
     except Exception as e:
+        print(f'{e=}')
         f.wirte(f'{e=}')
 
     finally:
@@ -213,7 +263,7 @@ def AomushiModelRead(newModel=False):
                     'max_episode_len': 50000
                     }
 
-    class QFunction(chainer.Chain):
+    class QFunctionLinear_3layer(chainer.Chain):
 
         def __init__(self, obs_size, n_actions, n_hidden_channels=paramDic['hidden_nodes']):
             super().__init__()
@@ -240,7 +290,7 @@ def AomushiModelRead(newModel=False):
     n_actions = 4
 
     # Q関数の定義
-    q_func = QFunction(obs_size, n_actions)
+    q_func = QFunctionLinear_3layer(obs_size, n_actions)
 
     # CUDAの使用。（使用する場合はコメントを外す）
     # q_func.to_gpu(0)

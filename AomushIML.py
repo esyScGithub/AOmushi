@@ -43,7 +43,7 @@ def AomushILearning(agent, paramDic, currentDir):
 
         # 初期値設定
         rewards = []
-        bestReward = -100
+        bestReward = -9999
         bestData = []
         bestAgent = agent
         saveCount = 0
@@ -91,6 +91,8 @@ def AomushILearning(agent, paramDic, currentDir):
             rewards.append(R)
 
     except Exception as e:
+        print(e)
+        print(e.with_traceback)
         pass
 
     finally:
