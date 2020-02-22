@@ -54,9 +54,9 @@ FILE_DIR = os.path.dirname(__file__)
 RESULT_FILE_PATH = "/data/result.csv"
 
 # Reward Setting
-REWARD_GET_FOOD = 1000
+REWARD_GET_FOOD = 100
 REWARD_TIME = 0
-REWARD_END = -100
+REWARD_END = -500
 
 class SnakeGameCore:
     def __init__(self):
@@ -398,8 +398,12 @@ class SnakeGameCore:
         self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood
         self.__l1NormSnakeToFood = np.linalg.norm(np.array(self.__snakeBody[-1]) - np.array(self.__foodPos), ord=1)
 
-        # 前回距離から今回距離を引いて、近くなっていれば報酬1、離れていれば-1
+        # [Reward] 前回距離から今回距離を引いて、近くなっていれば報酬1、離れていれば-1
         self.__mlReward += (self.__l1NormSnakeToFoodBefore - self.__l1NormSnakeToFood)
+        
+        # [Reward] 近づいていれば+1
+        # if self.__l1NormSnakeToFoodBefore > self.__l1NormSnakeToFood:
+        #     self.__mlReward += 1
 
         # print(f'{self.__mlObs}')
 
