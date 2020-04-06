@@ -54,9 +54,11 @@ FILE_DIR = os.path.dirname(__file__)
 RESULT_FILE_PATH = "/data/result.csv"
 
 # Reward Setting
-REWARD_GET_FOOD = 100
-REWARD_TIME = 0
-REWARD_END = -500
+REWARD_GET_FOOD = 1000
+REWARD_TIME = 1
+REWARD_END = 0
+REWARD_NEAR = 1
+REWARD_FAR = 1
 
 class SnakeGameCore:
     def __init__(self):
@@ -124,9 +126,12 @@ class SnakeGameCore:
         self.__snakeBody = [[0, 0], ]
         self.__score = 0
         self.__foodPos = [rd.randint(
-            0, self.__fieldSize-1), rd.randint(0, self.__fieldSize-1)]
+            1, self.__fieldSize-1), rd.randint(1, self.__fieldSize-1)]
         self.__l1NormSnakeToFood = np.linalg.norm(np.array(self.__snakeBody[-1]) - np.array(self.__foodPos), ord=1)
         self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood
+        # 学習用の終了フラグ（未終了で初期化）
+        self.__mlDone = False
+        self.__mlReward = 0
 
         if mode == 'ai':
             # 環境設定
@@ -173,6 +178,7 @@ class SnakeGameCore:
     def inputAgent(self):
         #agentからアクションをもらう
         obs = self.makeObs()
+        obs = obs[np.newaxis,:,:]
         self.__inputKey= self.agent.act(obs)
         pass
 
@@ -181,9 +187,9 @@ class SnakeGameCore:
         ゲーム状態を更新する。
         学習で、更新フレーム待ちなしでゲーム進行させるため、関数を独立
         '''
-        # 学習用の終了フラグ（未終了で初期化）
-        self.__mlDone = False
-        self.__mlReward = REWARD_TIME
+
+        # この行動で得られた報酬を記録するため、0で初期化。
+        self.__mlReward = 0
 
         if mode=='ai':
             self.inputAgent()
@@ -219,6 +225,7 @@ class SnakeGameCore:
 
         # foodPosが2行1列に対して、bodyが1行2列なので、inでTrueにならない
         if [self.x, self.y] == self.__foodPos:
+            # print('Eat'+str(self.__score))
         # if self.__snakeBody[-1] == self.__foodPos:
             self.nextFood()
             self.__score += 1
@@ -241,7 +248,7 @@ class SnakeGameCore:
                 self.__gameState = GAME_RESULT
             else:
                 self.__mlDone = True
-                self.__mlReward = REWARD_END
+                self.__mlReward = -REWARD_END
 
         self.__snakeBody.append([self.x, self.y])
 
@@ -354,6 +361,7 @@ class SnakeGameCore:
         tempFoodPos = self.__randBaseList[~np.in1d(self.__randBaseList.view(dtype='i,i').reshape(
             self.__randBaseList.shape[0]), tempSnakeBody.view(dtype='i,i').reshape(tempSnakeBody.shape[0]))]
         tempFoodPosReview = tempFoodPos.view(dtype='i,i').reshape(tempFoodPos.shape[0])
+        # print(tempFoodPosReview.shape)
         self.__foodPos = list(np.random.choice(tempFoodPosReview))
 
     def getEffectAdd(self, x, y):
@@ -372,9 +380,9 @@ class SnakeGameCore:
     def reset(self):
         self.mainInit()
         self.__mlObs = np.zeros((16,16), dtype=int)
-        self.__mlObs[0,0] = 1/3
+        self.__mlObs[0,0] = 1
         fp = np.array(self.__foodPos).T
-        self.__mlObs[fp[0], fp[1]] = 3/3 # エサの座標を2に設定
+        self.__mlObs[fp[0], fp[1]] = 3 # エサの座標を2に設定
 
         return self.__mlObs
 
@@ -398,12 +406,14 @@ class SnakeGameCore:
         self.__l1NormSnakeToFoodBefore = self.__l1NormSnakeToFood
         self.__l1NormSnakeToFood = np.linalg.norm(np.array(self.__snakeBody[-1]) - np.array(self.__foodPos), ord=1)
 
-        # [Reward] 前回距離から今回距離を引いて、近くなっていれば報酬1、離れていれば-1
-        self.__mlReward += (self.__l1NormSnakeToFoodBefore - self.__l1NormSnakeToFood)
-        
-        # [Reward] 近づいていれば+1
-        # if self.__l1NormSnakeToFoodBefore > self.__l1NormSnakeToFood:
-        #     self.__mlReward += 1
+        # 時間経過による減算
+        self.__mlReward -= REWARD_TIME
+
+        # [Reward] 前回距離から今回距離が、近くなっていれば報酬1、離れていれば-1
+        if self.__l1NormSnakeToFoodBefore > self.__l1NormSnakeToFood:
+            self.__mlReward += REWARD_NEAR
+        elif self.__l1NormSnakeToFoodBefore < self.__l1NormSnakeToFood:
+            self.__mlReward -= REWARD_FAR
 
         # print(f'{self.__mlObs}')
 
@@ -415,12 +425,12 @@ class SnakeGameCore:
         fp = np.array(self.__foodPos).T
         # print(f'fp:{fp}')
         if self.__mlDone == False:
-            obs = np.zeros((16,16), dtype=np.float32)
-            obs[sb[0], sb[1]] = 2/3 # SnakeBodyの座標を2に設定
-            obs[self.__snakeBody[-1][0], self.__snakeBody[-1][1]] = 1/3 # SnakeBodyHeadの座標を1に設定
-            obs[fp[0], fp[1]] = 3/3 # エサの座標を3に設定
+            obs = np.zeros((16,16), dtype=int)
+            obs[sb[0], sb[1]] = 2 # SnakeBodyの座標を2に設定
+            obs[self.__snakeBody[-1][0], self.__snakeBody[-1][1]] = 1 # SnakeBodyHeadの座標を1に設定
+            obs[fp[0], fp[1]] = 3 # エサの座標を3に設定
         else:
-            obs = np.zeros((16,16), dtype=np.float32)
+            obs = np.zeros((16,16), dtype=int)
 
         return obs
 

@@ -56,6 +56,10 @@ def AomushILearning(agent, paramDic, currentDir):
 
         for i in range(1, paramDic['n_episodes'] + 1):
             obs = aomushiEnv.reset()
+            # print(obs)
+            obs = obs[np.newaxis,:,:]
+            obs = np.reshape(obs, (1,16,16))
+            # print(obs)
             tempBestData =[]
             tempBestData.append(obs)
             reward = 0
@@ -65,7 +69,10 @@ def AomushILearning(agent, paramDic, currentDir):
             while not done and t < paramDic['max_episode_len']:
                 action = agent.act_and_train(obs, reward)
                 obs, reward, done = aomushiEnv.step(action)
+                obs = obs[np.newaxis,:,:]
+                # print(reward)
                 R += reward
+                # print(R)
                 t += 1
                 # 過程を保存する
                 tempBestData.append(obs)
@@ -91,8 +98,8 @@ def AomushILearning(agent, paramDic, currentDir):
             rewards.append(R)
 
     except Exception as e:
-        print(e)
-        print(e.with_traceback)
+        import traceback
+        traceback.print_exc()
         pass
 
     finally:
